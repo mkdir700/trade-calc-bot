@@ -50,32 +50,32 @@ type SetProfit interface {
 	SetProfit(float64) error
 }
 
-func (ap *OpenPosition) SetCapital(capital float64) error {
+func (op *OpenPosition) SetCapital(capital float64) error {
 	if capital < 0 {
 		return &err.InvalidInputError{Msg: "本金不能为负数"}
 	}
-	ap.Capital = capital
+	op.Capital = capital
 	return nil
 }
 
-func (ap *OpenPosition) SetCapitalLossRatio(capitalLossRatio float64) error {
+func (op *OpenPosition) SetCapitalLossRatio(capitalLossRatio float64) error {
 	if capitalLossRatio < 0 {
 		return &err.InvalidInputError{Msg: "本金亏损比例不能为负数"}
 	} else if capitalLossRatio > 1 {
 		return &err.InvalidInputError{Msg: "本金亏损比例不能大于1"}
 	}
 
-	ap.CapitalLossRatio = capitalLossRatio
+	op.CapitalLossRatio = capitalLossRatio
 	return nil
 }
 
-func (ap *OpenPosition) SetLossRatio(lossRatio float64) error {
+func (op *OpenPosition) SetLossRatio(lossRatio float64) error {
 	if lossRatio < 0 {
 		return &err.InvalidInputError{Msg: "本单止损比例不能为负数"}
 	} else if lossRatio > 1 {
 		return &err.InvalidInputError{Msg: "本单止损比例不能大于1"}
 	}
 
-	ap.LossRatio = lossRatio
+	op.LossRatio = lossRatio
 	return nil
 }
