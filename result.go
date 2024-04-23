@@ -1,13 +1,14 @@
-package task
+package main
 
 import (
+	"errors"
 	"math"
 
 	"strconv"
 )
 
 type OpenPositionResult struct {
-	OpenPosition
+	OpenPositionParams
 	Leverage               int     // 杠杆
 	Margin                 float64 // 保证金
 	PositionSize           float64 // 仓位大小
@@ -15,24 +16,31 @@ type OpenPositionResult struct {
 	RemainCapitalAfterLoss float64 // 止损后剩余本金
 }
 
-func NewOpenPositionResult(op OpenPosition) *OpenPositionResult {
-	positionSize := math.Ceil(op.Capital * op.CapitalLossRatio / op.LossRatio)
-	leverage := int(math.Ceil(positionSize / op.Capital))
-	maxLoss := math.Round(op.Capital * op.CapitalLossRatio)
-	remainCapitalAfterLoss := op.Capital - maxLoss
-	margin := math.Round(positionSize / float64(leverage))
-
+func NewOpenPositionResult(op OpenPositionParams) *OpenPositionResult {
 	return &OpenPositionResult{
-		OpenPosition:           op,
-		Leverage:               leverage,
-		Margin:                 margin,
-		PositionSize:           positionSize,
-		MaxLoss:                maxLoss,
-		RemainCapitalAfterLoss: remainCapitalAfterLoss,
+		OpenPositionParams: op,
 	}
 }
 
-func (op *OpenPositionResult) ShowMessage() string {
+func (op *OpenPositionResult) Calculate() error {
+	if op.Capital == 0 {
+		return errors.New("本金不能为0")
+	}
+	if op.CapitalLossRatio == 0 {
+		return errors.New("本金亏损比例不能为0")
+	}
+	if op.LossRatio == 0 {
+		return errors.New("止损比例不能为0")
+	}
+	op.PositionSize = math.Ceil(op.Capital * op.CapitalLossRatio / op.LossRatio)
+	op.Leverage = int(math.Ceil(op.PositionSize / op.Capital))
+	op.MaxLoss = math.Round(op.Capital * op.CapitalLossRatio)
+	op.RemainCapitalAfterLoss = op.Capital - op.MaxLoss
+	op.Margin = math.Round(op.PositionSize / float64(op.Leverage))
+	return nil
+}
+
+func (op *OpenPositionResult) BuildText() string {
 	var message string
 	message += "杠杆: " + strconv.Itoa(op.Leverage) + "\n"
 	message += "保证金: " + strconv.FormatFloat(op.Margin, 'f', -1, 64) + "\n"

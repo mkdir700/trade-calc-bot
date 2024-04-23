@@ -1,4 +1,4 @@
-package task
+package main
 
 import (
 	"sync"
@@ -8,35 +8,6 @@ var taskManager *TaskManager
 
 type TaskManager struct {
 	tasks sync.Map
-}
-
-// InputStep represents a step in the input process.
-type InputStep int
-
-const (
-	Start InputStep = iota
-	InputCapital
-	InputCapitalLossRadio
-	InputLossRadio
-	End
-)
-
-type Task struct {
-	Payload *OpenPosition
-	ID      int64
-	Step    InputStep
-}
-
-func NewTask(id int64) *Task {
-	return &Task{
-		ID:      id,
-		Step:    Start,
-		Payload: &OpenPosition{},
-	}
-}
-
-func (t *Task) NextStep() {
-	t.Step++
 }
 
 func (tm *TaskManager) AddTask(task *Task) {
