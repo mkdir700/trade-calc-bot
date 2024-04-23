@@ -25,6 +25,7 @@ type OpenPositionMenu struct {
 	closeButton       string
 	onError           OnErrorHandler
 	prefix            string
+	messageID         int
 	callbackHandlerID string
 }
 
@@ -47,16 +48,19 @@ func defaultOnError(err error) {
 func (o *OpenPositionMenu) Show(ctx context.Context, b *bot.Bot, chatID int64) (*models.Message, error) {
 	o.callbackHandlerID = b.RegisterHandler(bot.HandlerTypeCallbackQueryData, o.prefix, bot.MatchTypePrefix, o.callback)
 
-	return b.SendMessage(ctx, &bot.SendMessageParams{
+	msg, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
 		Text:        o.buildText(chatID),
 		ParseMode:   models.ParseModeMarkdown,
 		ReplyMarkup: o.buildKeyboard(),
 	})
+	o.messageID = msg.ID
+	return msg, err
 }
 
 func (o *OpenPositionMenu) ReplaceShow(ctx context.Context, b *bot.Bot, chatID int64, messageID int, inlineMessageID string) (*models.Message, error) {
 	o.callbackHandlerID = b.RegisterHandler(bot.HandlerTypeCallbackQueryData, o.prefix, bot.MatchTypePrefix, o.callback)
+	o.messageID = messageID
 
 	return b.EditMessageText(ctx, &bot.EditMessageTextParams{
 		ChatID:          chatID,
@@ -115,9 +119,10 @@ func (o *OpenPositionMenu) buildKeyboard() models.InlineKeyboardMarkup {
 	return kb
 }
 
-func (o *OpenPositionMenu) callbackAnswer(ctx context.Context, b *bot.Bot, callbackQuery *models.CallbackQuery) {
+func (o *OpenPositionMenu) callbackAnswer(ctx context.Context, b *bot.Bot, callbackQuery *models.CallbackQuery, text string) {
 	ok, err := b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
 		CallbackQueryID: callbackQuery.ID,
+		Text:            text,
 	})
 	if err != nil {
 		o.onError(err)
@@ -128,33 +133,46 @@ func (o *OpenPositionMenu) callbackAnswer(ctx context.Context, b *bot.Bot, callb
 	}
 }
 
+// 删除菜单
+func (o *OpenPositionMenu) deleteSelf(ctx context.Context, b *bot.Bot, update *models.Update) (bool, error) {
+	return b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+		ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
+		MessageID: o.messageID,
+	})
+}
+
 func (o *OpenPositionMenu) callback(ctx context.Context, b *bot.Bot, update *models.Update) {
 	cmd := strings.TrimPrefix(update.CallbackQuery.Data, o.prefix)
 	switch cmd {
 	case cmdInputCapital:
+		o.deleteSelf(ctx, b, update)
 		NewInputCapital().Show(ctx, b, update.CallbackQuery.Message.Message.Chat.ID)
-		o.callbackAnswer(ctx, b, update.CallbackQuery)
+		o.callbackAnswer(ctx, b, update.CallbackQuery, "")
 	case cmdInputCapitalLossRatio:
+		o.deleteSelf(ctx, b, update)
 		NewInputCapitalLossRadio().Show(ctx, b, update.CallbackQuery.Message.Message.Chat.ID)
-		o.callbackAnswer(ctx, b, update.CallbackQuery)
+		o.callbackAnswer(ctx, b, update.CallbackQuery, "")
 	case cmdInputLossRatio:
+		o.deleteSelf(ctx, b, update)
 		NewInputLossRatio().Show(ctx, b, update.CallbackQuery.Message.Message.Chat.ID)
-		o.callbackAnswer(ctx, b, update.CallbackQuery)
+		o.callbackAnswer(ctx, b, update.CallbackQuery, "")
 	case cmdCalculate:
-		o.callbackAnswer(ctx, b, update.CallbackQuery)
 		task := GetTaskManager().GetTask(update.CallbackQuery.Message.Message.Chat.ID)
 		if task == nil {
 			o.onError(errors.New("无法获取任务"))
+			o.callbackAnswer(ctx, b, update.CallbackQuery, "无法获取任务")
 			return
 		}
 		if task.Payload == nil {
 			o.onError(errors.New("无法获取任务数据"))
+			o.callbackAnswer(ctx, b, update.CallbackQuery, "无法获取任务数据")
 			return
 		}
 		result := NewOpenPositionResult(*task.Payload)
 		err := result.Calculate()
 		if err != nil {
 			o.onError(err)
+			o.callbackAnswer(ctx, b, update.CallbackQuery, err.Error())
 			return
 		}
 		text := result.BuildText()
@@ -162,18 +180,17 @@ func (o *OpenPositionMenu) callback(ctx context.Context, b *bot.Bot, update *mod
 			ChatID: update.CallbackQuery.Message.Message.Chat.ID,
 			Text:   text,
 		})
+		o.callbackAnswer(ctx, b, update.CallbackQuery, "")
+		o.deleteSelf(ctx, b, update)
 		b.UnregisterHandler(o.callbackHandlerID)
 	case cmdCancel:
-		b.UnregisterHandler(o.callbackHandlerID)
-
-		_, errDelete := b.DeleteMessage(ctx, &bot.DeleteMessageParams{
-			ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
-			MessageID: update.CallbackQuery.Message.Message.ID,
-		})
+		o.callbackAnswer(ctx, b, update.CallbackQuery, "")
+		GetTaskManager().RemoveTask(update.CallbackQuery.Message.Message.Chat.ID)
+		_, errDelete := o.deleteSelf(ctx, b, update)
 		if errDelete != nil {
 			o.onError(errDelete)
 		}
-		o.callbackAnswer(ctx, b, update.CallbackQuery)
+		b.UnregisterHandler(o.callbackHandlerID)
 	}
 }
 
