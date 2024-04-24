@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -17,13 +18,23 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
+	systemEnv := make(map[string]string)
+	for _, env := range os.Environ() {
+		kv := strings.Split(env, "=")
+		systemEnv[kv[0]] = kv[1]
+	}
+
 	if utils.IsProduction() {
-		err = godotenv.Load()
+		err = godotenv.Load(".env")
 	} else {
 		err = godotenv.Load(".env.development")
 	}
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file: ", err)
+	}
+
+	for k, v := range systemEnv {
+		os.Setenv(k, v)
 	}
 
 	token := os.Getenv("BOT_TOKEN")
