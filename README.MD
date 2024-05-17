@@ -1,3 +1,3 @@
-# Captital-Calculator-Tgbot
+# TradeCalcBot
 
-WIP
+🚧WIP🚧
