@@ -1,7 +1,7 @@
 package main
 
 import (
-	"capital_calculator_tgbot/err"
+	"trade_calc_bot/err"
 )
 
 type OpenPositionParams struct {

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"capital_calculator_tgbot/utils"
 	"context"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
+	"trade_calc_bot/utils"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"

@@ -13,13 +13,13 @@ RUN go mod download
 COPY . .
 
 # 指定OS等，并go build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o capital_calculator_tgbot .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o trade_calc_bot .
 
 FROM alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/capital_calculator_tgbot .
+COPY --from=builder /app/trade_calc_bot .
 
 RUN touch .env
 
@@ -27,4 +27,4 @@ ENV GIN_MODE=release
 
 ENV ENV=production
 
-CMD ["./capital_calculator_tgbot"]
+CMD ["./trade_calc_bot"]

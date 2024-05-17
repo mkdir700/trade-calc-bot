@@ -1,7 +1,7 @@
 package main
 
 // import (
-// 	"capital_calculator_tgbot/component"
+// 	"trade_calc_bot/component"
 // 	"context"
 
 // 	"github.com/go-telegram/bot"

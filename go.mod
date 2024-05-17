@@ -1,4 +1,4 @@
-module capital_calculator_tgbot
+module trade_calc_bot
 
 go 1.18
 

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
-	"capital_calculator_tgbot/utils"
 	"context"
+	"log"
+	"trade_calc_bot/utils"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -94,7 +94,7 @@ func (m *InputCapital) callback(ctx context.Context, b *bot.Bot, update *models.
 		ChatID:     update.Message.Chat.ID,
 		MessageIDs: []int{update.Message.ID, update.Message.ReplyToMessage.ID},
 	})
-	
+
 	if err != nil {
 		m.onError(err)
 		return
