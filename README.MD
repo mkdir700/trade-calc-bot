@@ -18,14 +18,15 @@
 
 ## 示例
 
+![recording](https://github.com/mkdir700/trade-calc-bot/assets/56359329/1df4fe0a-f3b9-49ba-a820-c3738996ddf1)
 
 ## TODO
 
-[ ] 加入资金费率的计算
+- [ ] 加入资金费率的计算
 
-[ ] 通过交易所 API，自动获取本金
+- [ ] 通过交易所 API，自动获取本金
 
-[ ] 通过交易所 API，获取资金费率
+- [ ] 通过交易所 API，获取资金费率
 
 ## 贡献
 
