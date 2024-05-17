@@ -51,7 +51,7 @@ func (o *OpenPositionMenu) Show(ctx context.Context, b *bot.Bot, chatID int64) (
 	msg, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
 		Text:        o.buildText(chatID),
-		ParseMode:   models.ParseModeMarkdown,
+		ParseMode:   models.ParseModeHTML,
 		ReplyMarkup: o.buildKeyboard(),
 	})
 	o.messageID = msg.ID
@@ -75,12 +75,11 @@ func (o *OpenPositionMenu) ReplaceShow(ctx context.Context, b *bot.Bot, chatID i
 func (o *OpenPositionMenu) buildKeyboard() models.InlineKeyboardMarkup {
 	row1 := []models.InlineKeyboardButton{
 		{
-			Text:         "本金",
+			Text:         "当前本金",
 			CallbackData: o.prefix + cmdInputCapital,
 		},
 	}
 
-	// 第二行：输入本金亏损比例按钮
 	row2 := []models.InlineKeyboardButton{
 		{
 			Text:         "本金亏损比例",
@@ -88,10 +87,9 @@ func (o *OpenPositionMenu) buildKeyboard() models.InlineKeyboardMarkup {
 		},
 	}
 
-	// 第三行：输入亏损比例按钮
 	row3 := []models.InlineKeyboardButton{
 		{
-			Text:         "本单亏损比例",
+			Text:         "开仓止损比例",
 			CallbackData: o.prefix + cmdInputLossRatio,
 		},
 	}
@@ -220,13 +218,11 @@ func (o *OpenPositionMenu) buildText(chatId int64) string {
 		textLossRatio = fmt.Sprintf("%0.2f%%", lossRatio*100)
 	}
 
-	template := `计算开仓
+	template := `🔢计算开仓
 
-本金: %s
-
-本金亏损比例: %s
-
-本单亏损比例: %s
+💰本金: %s
+⏳预计亏损: %s
+⏳止损比例: %s
 
 点击下方按钮输入相关数据`
 	text := fmt.Sprintf(

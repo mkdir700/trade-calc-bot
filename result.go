@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"math"
-
-	"strconv"
+	"strings"
 )
 
 type OpenPositionResult struct {
@@ -42,14 +42,15 @@ func (op *OpenPositionResult) Calculate() error {
 
 func (op *OpenPositionResult) BuildText() string {
 	var message string
-	message += "本金: " + strconv.FormatFloat(op.Capital, 'f', -1, 64) + "\n"
-	message += "本金亏损比例: " + strconv.FormatFloat(op.CapitalLossRatio, 'f', -1, 64) + "\n"
-	message += "止损比例: " + strconv.FormatFloat(op.LossRatio, 'f', -1, 64) + "\n"
-	message += "\r\n"
-	message += "杠杆: " + strconv.Itoa(op.Leverage) + "\n"
-	message += "保证金: " + strconv.FormatFloat(op.Margin, 'f', -1, 64) + "\n"
-	message += "仓位大小: " + strconv.FormatFloat(op.PositionSize, 'f', -1, 64) + "\n"
-	message += "本金的最大亏损: " + strconv.FormatFloat(op.MaxLoss, 'f', -1, 64) + "\n"
-	message += "止损后剩余本金: " + strconv.FormatFloat(op.RemainCapitalAfterLoss, 'f', -1, 64) + "\n"
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("本金: %0.2f\n", op.Capital))
+	builder.WriteString(fmt.Sprintf("本金亏损比例: %0.2f%%\n", op.CapitalLossRatio*100))
+	builder.WriteString(fmt.Sprintf("开仓止损比例: %0.2f%%\n", op.LossRatio*100))
+	builder.WriteString(fmt.Sprintf("杠杆: %d\n", op.Leverage))
+	builder.WriteString(fmt.Sprintf("保证金: %0.2f\n", op.Margin))
+	builder.WriteString(fmt.Sprintf("仓位大小: %0.2f\n", op.PositionSize))
+	builder.WriteString(fmt.Sprintf("预计亏损: %0.2f\n", op.MaxLoss))
+	builder.WriteString(fmt.Sprintf("剩余本金: %0.2f\n", op.RemainCapitalAfterLoss))
+	message = builder.String()
 	return message
 }

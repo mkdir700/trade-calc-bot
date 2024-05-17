@@ -16,7 +16,7 @@ type InputLossRatio struct {
 
 func NewInputLossRatio() *InputLossRatio {
 	return &InputLossRatio{
-		text: "请输入亏损比例(单位: %), 例如: 0.38",
+		text: "请输入止损比例(单位: %), 例如: 0.38",
 	}
 }
 
@@ -39,6 +39,9 @@ func (m *InputLossRatio) Show(ctx context.Context, b *bot.Bot, chatID int64) err
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
 		Text:   m.text,
+		ReplyMarkup: &models.ForceReply{
+			ForceReply: true,
+		},
 	})
 	return err
 }
@@ -58,9 +61,28 @@ func (m *InputLossRatio) callback(ctx context.Context, b *bot.Bot, update *model
 	}
 
 	task.Payload.SetLossRatio(lossRatio / 100)
-	_, err = NewBack("亏损比例设置为"+update.Message.Text+"%, 点击下方按钮返回", CmdReturnOpenPositionMenu).Show(ctx, b, update.Message.Chat.ID)
+
+	// 删除用户的回复消息
+	_, err = b.DeleteMessages(ctx, &bot.DeleteMessagesParams{
+		ChatID:     update.Message.Chat.ID,
+		MessageIDs: []int{update.Message.ID, update.Message.ReplyToMessage.ID},
+	})
+	
 	if err != nil {
 		m.onError(err)
+		return
+	}
+
+	// 返回上一级菜单
+	_, err = NewOpenPositionMenu().Show(
+		ctx,
+		b,
+		update.Message.Chat.ID,
+	)
+
+	if err != nil {
+		m.onError(err)
+		return
 	}
 	b.UnregisterHandler(m.callbackHandlerID)
 }
@@ -68,31 +90,3 @@ func (m *InputLossRatio) callback(ctx context.Context, b *bot.Bot, update *model
 func (m *InputLossRatio) onError(err error) {
 	log.Println("[InputLossRatio] [ERROR] Error: ", err)
 }
-
-// func (m *InputLossRatio) HandleMessage(ctx context.Context, b *bot.Bot, mes *models.Message) error {
-// 	task := t.GetTaskManager().GetTask(mes.Chat.ID)
-// 	lossRatio, err := strconv.ParseFloat(string(mes.Text), 64)
-// 	if err != nil {
-// 		b.SendMessage(ctx, &bot.SendMessageParams{
-// 			ChatID: mes.Chat.ID,
-// 			Text:   "请输入有效的数字",
-// 		})
-// 		return err
-// 	}
-// 	if lossRatio <= 0 {
-// 		b.SendMessage(ctx, &bot.SendMessageParams{
-// 			ChatID: mes.Chat.ID,
-// 			Text:   "请输入大于0的数字",
-// 		})
-// 		return err
-// 	}
-// 	if lossRatio > 1 {
-// 		b.SendMessage(ctx, &bot.SendMessageParams{
-// 			ChatID: mes.Chat.ID,
-// 			Text:   "请输入小于1的数字",
-// 		})
-// 		return err
-// 	}
-// 	task.Payload.SetLossRatio(lossRatio / 100)
-// 	return nil
-// }

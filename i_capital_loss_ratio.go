@@ -96,21 +96,36 @@ func (m *InputCapitalLossRadio) callbackAnswer(ctx context.Context, b *bot.Bot, 
 func (m *InputCapitalLossRadio) callback(ctx context.Context, b *bot.Bot, update *models.Update) {
 	cmd := strings.TrimPrefix(update.CallbackQuery.Data, m.prefix)
 	task := taskManager.GetTask(update.CallbackQuery.Message.Message.Chat.ID)
+
+	back := func() {
+		_, err := NewOpenPositionMenu().ReplaceShow(
+			ctx,
+			b,
+			update.CallbackQuery.Message.Message.Chat.ID,
+			update.CallbackQuery.Message.Message.ID,
+			update.CallbackQuery.InlineMessageID,
+		)
+		if err != nil {
+			m.onError(err)
+			return
+		}
+	}
+
 	switch cmd {
 	case cmd0_01:
 		task.Payload.SetCapitalLossRatio(0.01)
 		m.callbackAnswer(ctx, b, update.CallbackQuery)
-		NewBack("本金亏损比例设置为1%, 点击下方按钮返回", CmdReturnOpenPositionMenu).Show(ctx, b, update.CallbackQuery.Message.Message.Chat.ID)
+		back()
 	case cmd0_02:
 		m.callbackAnswer(ctx, b, update.CallbackQuery)
 		task.Payload.SetCapitalLossRatio(0.02)
-		NewBack("本金亏损比例设置为2%, 点击下方按钮返回", CmdReturnOpenPositionMenu).Show(ctx, b, update.CallbackQuery.Message.Message.Chat.ID)
+		back()
 	case cmd0_03:
 		m.callbackAnswer(ctx, b, update.CallbackQuery)
 		task.Payload.SetCapitalLossRatio(0.03)
-		NewBack("本金亏损比例设置为3%, 点击下方按钮返回", CmdReturnOpenPositionMenu).Show(ctx, b, update.CallbackQuery.Message.Message.Chat.ID)
+		back()
 	case cmdCustom:
-
+		m.onError(fmt.Errorf("custom"))
 	}
 	b.UnregisterHandler(m.callbackHandlerID)
 }
